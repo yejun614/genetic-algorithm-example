@@ -95,7 +95,7 @@ impl GAModel {
         println!(" [divide] {:?}", self.divide);
         println!(" [properties] {:?}", self.properties);
 
-        println!("\n Press any key to continue ...");
+        println!("\n Press enter key to continue ...");
         stdout().flush().unwrap();
         stdin().read(&mut [0]).unwrap();
 
@@ -382,7 +382,7 @@ fn main() {
     // Welcome
     println!("\nGenetic Algorithm Example with Rust");
     println!(" -- Worth distribution problem");
-    println!(" -- YeJun, Jung (yejun614@naver.com");
+    println!(" -- YeJun, Jung (yejun614@naver.com)");
     println!(" -- 2022-08-31");
     print!("\n");
 
