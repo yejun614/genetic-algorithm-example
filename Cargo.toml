@@ -7,5 +7,7 @@ edition = "2021"
 
 [dependencies]
 rand = "0.8.5"
-plotters = "0.3.3"
+#plotters = "0.3.3"
 chrono = "0.4.22"
+egui = "0.19.0"
+eframe = "0.19.0"
