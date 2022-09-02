@@ -65,6 +65,28 @@ impl eframe::App for GeneApp {
 
         ctx.set_style(style);
 
+        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+            ui.add_space(10.0);
+            ui.horizontal(|ui| {
+                if ui.button("Control").clicked() {
+                    self.control_window = !self.control_window;
+                }
+
+                if ui.button("Plot").clicked() {
+                    self.plot_window = !self.plot_window;
+                }
+
+                if ui.button("Fit results").clicked() {
+                    self.fit_results_window = !self.fit_results_window;
+                }
+
+                if ui.button("Logs").clicked() {
+                    self.logs_window = !self.logs_window;
+                }
+            });
+            ui.add_space(5.0);
+        });
+
         egui::Window::new("Control")
           .default_size(egui::Vec2::new(1000.0, 300.0))
           .open(&mut self.control_window)
