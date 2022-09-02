@@ -205,18 +205,27 @@ impl eframe::App for GeneApp {
                   });
           });
 
-        // egui::Window::new("Fit Result")
-        //   .default_size(egui::Vec2::new(1000.0, 300.0))
-        //   .open(&mut self.fit_results_window)
-        //   .show(ctx, |ui| {
-        //       ui.heading("Best Gene");
+        egui::Window::new("Fit Result")
+          .default_size(egui::Vec2::new(1000.0, 300.0))
+          .open(&mut self.fit_results_window)
+          .show(ctx, |ui| {
+              ui.heading("Best Gene");
+              
+              ui.add(egui::widgets::ProgressBar::new(self.model.tracker.total_generation as f32 / self.generation as f32));
+              ui.add_space(10.0);
 
-        //       ui.label("Gene Data: ");
-        //       ui.label(format!("{:?}", self.model.tracker.best_gene.data));
+              ui.label("Gene Data: ");
+              ui.label(format!("{:?}", self.model.tracker.best_gene.data));
+              ui.add_space(10.0);
 
-        //       ui.label("Fitness: ");
-        //       ui.label(format!("{}", self.model.tracker.best_gene.fitness));
-        //   });
+              ui.label("Fitness: ");
+              ui.label(format!("{}", self.model.tracker.best_gene.fitness));
+              ui.add_space(10.0);
+
+              ui.label("Real Fitness: ");
+              let properties_sum: i32 = self.model.properties.iter().sum();
+              ui.label(format!("{}", self.model.tracker.best_gene.fitness * properties_sum as f64));
+          });
 
         ctx.request_repaint();
     }
