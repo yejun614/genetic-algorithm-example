@@ -5,6 +5,7 @@
 
 use std::thread;
 use std::sync::mpsc;
+use std::time::{Instant, Duration};
 use std::io::{stdout, stdin, Write, Read};
 use rand::prelude::{Rng};
 // use plotters::prelude::*;
@@ -13,6 +14,7 @@ use chrono::{Local, DateTime};
 #[derive(Clone)]
 pub struct GAModelTracker {
     pub local_datetime: DateTime<Local>,
+    pub is_running: bool,
     pub best_gene: Gene,
     pub total_generation: i32,
     pub best_fitness_changes: Vec<f64>,
@@ -24,6 +26,7 @@ impl Default for GAModelTracker {
     fn default() -> Self {
         Self {
             local_datetime: Local::now(),
+            is_running: false,
             best_gene: Gene { data: Vec::new(), fitness: 1.0 },
             total_generation: 0,
             best_fitness_changes: Vec::<f64>::new(),
@@ -110,24 +113,42 @@ impl Default for GAModel {
 }
 
 impl GAModel {
-    pub fn fit_back(&mut self, generations: usize) -> (thread::JoinHandle<()>, mpsc::Receiver<GAModelTracker>) {
-        let (tx, rx) = mpsc::channel();
+    pub fn fit_back(&mut self, generations: usize) -> (thread::JoinHandle<()>, mpsc::Sender<bool>, mpsc::Receiver<GAModelTracker>) {
+        let (tx, rx) = mpsc::channel::<GAModelTracker>();
+        let (app_tx, app_rx) = mpsc::channel::<bool>();
         let mut model = self.clone();
+        let mut now = Instant::now();
 
         let handler = thread::spawn(move || {
             model.tracker.reset();
+            model.tracker.is_running = true;
             model.shake();
 
             for generation in 0..generations {
+                match app_rx.try_recv() {
+                    Ok(is_running) => {
+                        if is_running {
+                            println!("STOPPED");
+                            break;
+                        }
+                    }
+                    Err(err) => {}
+                }
+
                 model.run_once(generation);
 
-                tx.send(model.tracker.clone()).unwrap();
+                if now.elapsed() >= Duration::from_millis(50) {
+                    tx.send(model.tracker.clone()).unwrap();
+                    now = Instant::now();
+                }
             }
-
             println!("Done.");
+
+            model.tracker.is_running = false;
+            tx.send(model.tracker.clone()).unwrap();
         });
 
-        (handler, rx)
+        (handler, app_tx, rx)
     }
 
     pub fn fit(&mut self, generations: usize) {

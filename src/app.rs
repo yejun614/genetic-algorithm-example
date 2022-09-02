@@ -18,7 +18,8 @@ use super::model::{GAModelTracker, GAModel, Gene};
 
 pub struct GeneApp {
     pub model: GAModel,
-    pub recv: mpsc::Receiver<GAModelTracker>,
+    pub sender: mpsc::Sender<bool>,
+    pub receiver: mpsc::Receiver<GAModelTracker>,
     pub generation: usize,
     pub divide_file_path: String,
     pub properties_file_path: String,
@@ -32,7 +33,8 @@ impl Default for GeneApp {
     fn default() -> Self {
         Self {
             model: GAModel::default(),
-            recv: mpsc::channel().1,
+            sender: mpsc::channel().0,
+            receiver: mpsc::channel().1,
             generation: 5000,
             divide_file_path: "./property/divide10.txt".to_string(),
             properties_file_path: "./property/properties100.txt".to_string(),
@@ -40,12 +42,17 @@ impl Default for GeneApp {
             logs_window: false,
             plot_window: false,
             fit_results_window: false,
-          }
+        }
     }
 }
 
 impl eframe::App for GeneApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        match self.receiver.try_recv() {
+          Ok(tracker) => { self.model.tracker = tracker; }
+          Err(err) => {}
+        }
+
         let mut style = (*ctx.style()).clone();
 
         style.text_styles = [
@@ -75,14 +82,6 @@ impl eframe::App for GeneApp {
 
                   ui.label("Properties File Path");
                   ui.text_edit_singleline(&mut self.properties_file_path);
-                  ui.add_space(10.0);
-
-                  if ui.button("Load datasets").clicked() {
-                    let (divide, properties) = load_dataset(&self.divide_file_path, &self.properties_file_path);
-
-                    self.model.divide = divide;
-                    self.model.properties = properties;
-                  }
               });
 
               ui.collapsing("Parameters", |ui| {
@@ -119,15 +118,31 @@ impl eframe::App for GeneApp {
                   });
               });
 
-              if ui.button("Fit start").clicked() {
-                  self.plot_window = true;
-                  self.fit_results_window = true;
+              if self.model.tracker.is_running {
+                if ui.button("Fit stop").clicked() {
+                    self.sender.send(true).unwrap();
+                }
+              } else {
+                if ui.button("Fit start").clicked() {
+                    // Load datasets
+                    let (divide, properties) = load_dataset(&self.divide_file_path, &self.properties_file_path);
 
-                  let mut model = self.model.clone();
-                  let generation = self.generation;
+                    self.model.divide = divide;
+                    self.model.properties = properties;
 
-                  let (handler, rx) = model.fit_back(generation);
-                  self.recv = rx;
+                    // Open windows
+                    self.plot_window = true;
+                    self.fit_results_window = true;
+
+                    // Set model
+                    let mut model = self.model.clone();
+                    let generation = self.generation;
+
+                    // Fit start
+                    let (handler, tx, rx) = model.fit_back(generation);
+                    self.sender = tx;
+                    self.receiver = rx;
+                }
               }
         });
 
@@ -144,11 +159,6 @@ impl eframe::App for GeneApp {
           .default_size(egui::Vec2::new(1000.0, 300.0))
           .open(&mut self.plot_window)
           .show(ctx, |ui| {
-              match self.recv.try_recv() {
-                Ok(tracker) => { self.model.tracker = tracker; }
-                Err(err) => {}
-              }
-
               let best_fitness_changes: PlotPoints = (0..self.model.tracker.total_generation).map(|i| {
                   let x = i as f64;
                   [x, self.model.tracker.best_fitness_changes[i as usize]]
