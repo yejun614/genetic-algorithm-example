@@ -18,7 +18,7 @@ cargo build --release
 - property/properties200.txt
 
 ## Plot charts (fitness changes)
-![fitness_changes](./fitness_changes.png)
+![fitness_changes](./img/fitness_changes.png)
 
 ## License
 ```
