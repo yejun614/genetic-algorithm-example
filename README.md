@@ -17,6 +17,9 @@ cargo build --release
 - property/properties1000.txt
 - property/properties200.txt
 
+## Screenshots
+![screenshot1](./img/screenshot1.png)
+
 ## Plot charts (fitness changes)
 ![fitness_changes](./img/fitness_changes.png)
 
