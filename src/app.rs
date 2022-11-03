@@ -66,6 +66,7 @@ impl eframe::App for GeneApp {
         ctx.set_style(style);
 
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+
             ui.add_space(10.0);
             ui.horizontal(|ui| {
                 if ui.button("Control").clicked() {
