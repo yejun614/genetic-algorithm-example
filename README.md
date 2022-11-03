@@ -1,4 +1,4 @@
-# genetic_algorithm_example
+# Genetic Algorithm Example
 Genetic algorithm example with Rust lang (Property distribution problem)
 
 ## Usage
